@@ -7,6 +7,8 @@ class CalcController {
         this._$time = document.querySelector('#hora');
         this._locale = 'pt-BR';
         this._operation = [0];
+        this._lastOperator = '';
+        this._lastNumber = '';
         this._currentDate;
         this.initialize();
     }
@@ -54,6 +56,8 @@ class CalcController {
 
     clearAll() {
         this.operation = [0];
+        this.lastNumber = '';
+        this.lastOperator = '';
         this.setLastNumberToDisplay();
     }
 
@@ -93,28 +97,61 @@ class CalcController {
         }
     }
 
+    getResult() {
+        return eval(this.operation.join(""));
+    }
+
     calc() {
-        let lastValue = this.operation.pop();
-        let result = eval(this.operation.join(""));
+        let lastValue = '';
+        this.lastOperator = this.getLastItem();
+
+        if (this.operation.length < 3) {
+            let firstItem = this.operation[0];
+            this.operation = [firstItem, this.lastOperator, this.lastNumber];
+        }
+        if (this.operation.length > 3) {
+            lastValue = this.operation.pop();             
+            
+            this.lastNumber = this.getResult();
+        } else if (this.operation.length === 3) {  
+            this.lastNumber = this.getLastItem(false);
+        } 
+
+        let result = this.getResult();
 
         if (lastValue == '%') {
             result /= 100; //é o mesmo que result = result / 100
             this.operation = [result];
         } else {            
-            this.operation = [result, lastValue];
-        }
+            this.operation = [result];
+            if (lastValue) this.operation.push(lastValue); 
+        }        
         this.setLastNumberToDisplay();
     }
 
-    setLastNumberToDisplay() {
-        let lastNumber;
+    getLastItem(isOperator = true) {
+        let lastItem;
         for (let i = this.operation.length - 1; i >= 0; i--) {
-            if (!this.isOperator(this.operation[i])) {
-                lastNumber = this.operation[i];
+            if (this.isOperator(this.operation[i]) === isOperator) {
+                lastItem = this.operation[i];
                 break;
             }
         }
-        this.displayCalc = lastNumber;
+
+        if (!lastItem && lastItem !== 0) {
+            lastItem = (isOperator) ? this.lastOperator : this.lastNumber;
+        }        
+        return lastItem;
+    }
+
+    setLastNumberToDisplay() {
+        let lastNumber = this.getLastItem(false);
+        
+        if (this.isInitialStateOperation()) {
+            this.displayCalc = 0;
+        } else {
+            this.displayCalc = lastNumber;
+        }        
     }
 
     addOperation(value) {
@@ -152,7 +189,6 @@ class CalcController {
                 this.setLastNumberToDisplay();
             }
         }
-        console.log(this.operation);
     }
 
     setError() {
@@ -190,6 +226,7 @@ class CalcController {
                 break;
 
             case 'igual':
+                this.calc();
                 break;
 
             case 'ponto':
@@ -249,6 +286,22 @@ class CalcController {
 
     set operation(value) {
         return this._operation = value
+    }
+
+    get lastOperator() {
+        return this._lastOperator;
+    }
+
+    set lastOperator(value) {
+        return this._lastOperator = value
+    }
+
+    get lastNumber() {
+        return this._lastNumber;
+    }
+
+    set lastNumber(value) {
+        return this._lastNumber = value
     }
 
     get currentDate() {
