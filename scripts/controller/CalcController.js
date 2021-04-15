@@ -5,11 +5,16 @@ class CalcController {
         this._$displayCalc = document.querySelector('#display');
         this._$date = document.querySelector('#data');
         this._$time = document.querySelector('#hora');
-        this._locale = 'pt-BR';
+
         this._operation = [0];
         this._lastOperator = '';
         this._lastNumber = '';
-        this._currentDate;
+
+        this._locale = 'pt-BR';
+        this._currentDate;        
+        this._audioOnOff = false;
+        this._audio = new Audio('click.mp3');
+
         this.initialize();
     }
 
@@ -22,27 +27,47 @@ class CalcController {
         this.initButtonEvents();
         this.setLastNumberToDisplay();
         this.initKeyboard();  
-        this.pasteFromClipboard()      
+        this.pasteFromClipboard();
+
+        // Duplo click no AC para ativar/desativar som
+        document.querySelectorAll('.btn-ac').forEach(btn => {
+            btn.addEventListener('dblclick', e => {
+                this.toggleAudio();
+            })
+        })
     }
 
     pasteFromClipboard() {
         document.addEventListener('paste', e => {
             let text = e.clipboardData.getData('Text');
-            this.displayCalc = parseFloat(text);
+            this.$displayCalc = parseFloat(text);
         })
     }
 
     copyToClipboard() {
         let input = document.createElement('input');
-        input.value = this.displayCalc;
+        input.value = this.$displayCalc;
         document.body.appendChild(input);
         input.select();
         document.execCommand("Copy");
         input.remove();
     }
 
+    toggleAudio() {
+        this.audioOnOff = !this.audioOnOff;        
+    }
+
+    playAudio() {
+       if (this.audioOnOff) {
+           this.audio.currentTime = 0;
+           this.audio.play();
+       } 
+    }
+
     initKeyboard() {
         document.addEventListener('keyup', e => {
+            this.playAudio();
+
             switch (e.key) {
                 case 'Delete':
                     this.clearAll();
@@ -89,7 +114,7 @@ class CalcController {
         })
     }
 
-    addEventListenerAll(element, events, fn) { //trabalha com mais de um evento do DOM
+    addEventListenerAll(element, events, fn) { // Trabalha com mais de um evento do DOM
         events.split('-').forEach(event => {
             element.addEventListener(event, fn, false);
         });
@@ -111,8 +136,8 @@ class CalcController {
     }
 
     setDisplayDateTime() {
-        this.displayTime = this.currentDate.toLocaleTimeString(this.locale);
-        this.displayDate = this.currentDate.toLocaleDateString(this.locale, {
+        this.$displayTime = this.currentDate.toLocaleTimeString(this.locale);
+        this.$displayDate = this.currentDate.toLocaleDateString(this.locale, {
             day: '2-digit',
             month: 'short',
             year: 'numeric'
@@ -185,7 +210,7 @@ class CalcController {
         let result = this.getResult();
 
         if (lastValue == '%') {
-            result /= 100; //é o mesmo que result = result / 100
+            result /= 100; // É o mesmo que result = result / 100
             this.operation = [result];
         } else {
             this.operation = [result];
@@ -213,9 +238,9 @@ class CalcController {
         let lastNumber = this.getLastItem(false);
 
         if (this.isInitialStateOperation()) {
-            this.displayCalc = 0;
+            this.$displayCalc = 0;
         } else {
-            this.displayCalc = lastNumber;
+            this.$displayCalc = lastNumber;
         }
     }
 
@@ -261,14 +286,14 @@ class CalcController {
     }
 
     setError() {
-        this.displayCalc = 'ERROR';
+        this.$displayCalc = 'ERROR';
     }
 
     addDot() { //add "."
         let lastOperation = this.getLastOperation();
 
         if (typeof lastOperation === 'string' && lastOperation.split('').indexOf('.') > -1) return;
-        //O if acima verifica se o "." já existe em lastOperation
+        // O if acima verifica se o "." já existe em lastOperation
 
         if (this.isOperator(lastOperation)) {
             this.pushOperation('0.');
@@ -279,6 +304,8 @@ class CalcController {
     }
 
     execBtn(btnValue) {
+        this.playAudio();
+
         switch (btnValue) {
             case 'ac':
                 this.clearAll();
@@ -335,27 +362,27 @@ class CalcController {
         }
     }
 
-    get displayTime() {
+    get $displayTime() {
         return this._$time.innerHTML;
     }
 
-    set displayTime(time) {
+    set $displayTime(time) {
         return this._$time.innerHTML = time;
     }
 
-    get displayDate() {
+    get $displayDate() {
         return this._$date.innerHTML;
     }
 
-    set displayDate(date) {
+    set $displayDate(date) {
         return this._$date.innerHTML = date;
     }
 
-    get displayCalc() {
+    get $displayCalc() {
         return this._$displayCalc.innerHTML;
     }
 
-    set displayCalc(digit) {
+    set $displayCalc(digit) {
         return this._$displayCalc.innerHTML = digit;
     }
 
@@ -385,6 +412,18 @@ class CalcController {
 
     set lastNumber(value) {
         return this._lastNumber = value
+    }
+
+    get audioOnOff() {
+        return this._audioOnOff;
+    }
+
+    set audioOnOff(state) {
+        return this._audioOnOff = state
+    }
+
+    get audio() {
+        return this._audio;
     }
 
     get currentDate() {
