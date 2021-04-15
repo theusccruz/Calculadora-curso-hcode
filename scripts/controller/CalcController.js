@@ -15,13 +15,78 @@ class CalcController {
 
     initialize() {
         this.setDisplayDateTime();
-
         setInterval(() => {
             this.setDisplayDateTime();
         }, 1000);
 
         this.initButtonEvents();
         this.setLastNumberToDisplay();
+        this.initKeyboard();  
+        this.pasteFromClipboard()      
+    }
+
+    pasteFromClipboard() {
+        document.addEventListener('paste', e => {
+            let text = e.clipboardData.getData('Text');
+            this.displayCalc = parseFloat(text);
+        })
+    }
+
+    copyToClipboard() {
+        let input = document.createElement('input');
+        input.value = this.displayCalc;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand("Copy");
+        input.remove();
+    }
+
+    initKeyboard() {
+        document.addEventListener('keyup', e => {
+            switch (e.key) {
+                case 'Delete':
+                    this.clearAll();
+                    break;
+
+                case 'Backspace':
+                    this.clearEntry();
+                    break;
+
+                case '+':
+                case '-':
+                case '/':
+                case '*':
+                case '%':
+                    this.addOperation(e.key);
+                    break;
+
+                case 'Enter':
+                case '=':
+                    this.calc();
+                    break;
+
+                case '.':
+                    this.addDot();
+                    break;
+
+                case '0':
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9':
+                    this.addOperation(parseInt(e.key));
+                    break;  
+                case 'c':
+                    if (e.ctrlKey) this.copyToClipboard();
+                    break;
+
+            }
+        })
     }
 
     addEventListenerAll(element, events, fn) { //trabalha com mais de um evento do DOM
@@ -156,10 +221,10 @@ class CalcController {
 
     concatNumbers(number) {
         if (this.isInitialStateOperation()) {
-            this.setLastOperation(number);                    
+            this.setLastOperation(number);
         } else {
             let newValue = this.getLastOperation().toString() + number.toString();
-            this.setLastOperation(newValue);     
+            this.setLastOperation(newValue);
         }
     }
 
@@ -191,7 +256,7 @@ class CalcController {
                 //Concatena último número do array com o próximo acionado (value)
                 this.concatNumbers(value)
                 this.setLastNumberToDisplay();
-            }            
+            }
         }
     }
 
