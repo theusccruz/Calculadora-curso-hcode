@@ -188,7 +188,14 @@ class CalcController {
     }
 
     getResult() {
-        return eval(this.operation.join(""));
+        try {
+            return eval(this.operation.join(""));
+        } catch (error) {
+            //throw(error);
+            setTimeout(() => {
+                this.setError();
+            }, 1);            
+        }        
     }
 
     calc() {
@@ -383,6 +390,10 @@ class CalcController {
     }
 
     set $displayCalc(digit) {
+        if (digit.toString().length > 10) {
+            this.setError();
+            return false;
+        }
         return this._$displayCalc.innerHTML = digit;
     }
 
